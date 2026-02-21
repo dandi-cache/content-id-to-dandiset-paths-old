@@ -17,7 +17,7 @@ If you only plan to use this cache infrequently or from disparate locations, you
 ```python
 import requests
 
-cache_url = "https://raw.githubusercontent.com/dandi-cache/content-id-to-dandiset-paths/main/cache.json"
+cache_url = "https://raw.githubusercontent.com/dandi-cache/content-id-to-dandiset-paths/refs/heads/main/derivatives/content_id_to_dandiset_paths.yaml"
 response = requests.get(cache_url)
 cache = response.json()
 ```
@@ -25,7 +25,7 @@ cache = response.json()
 ### Save to file
 
 ```bash
-curl https://raw.githubusercontent.com/dandi-cache/content-id-to-dandiset-paths/main/cache.json -o cache.json
+curl https://raw.githubusercontent.com/dandi-cache/content-id-to-dandiset-paths/refs/heads/main/derivatives/content_id_to_dandiset_paths.yaml -o content_id_to_dandiset_paths.min.json.gz
 ```
 
 
