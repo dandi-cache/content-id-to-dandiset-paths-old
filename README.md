@@ -15,17 +15,19 @@ If you only plan to use this cache infrequently or from disparate locations, you
 ### Python API (recommended)
 
 ```python
+import gzip
+import json
 import requests
 
-cache_url = "https://raw.githubusercontent.com/dandi-cache/content-id-to-dandiset-paths/refs/heads/main/derivatives/content_id_to_dandiset_paths.yaml"
-response = requests.get(cache_url)
-cache = response.json()
+url = "https://raw.githubusercontent.com/dandi-cache/content-id-to-dandiset-paths/refs/heads/min/derivatives/content_id_to_dandiset_paths.min.json.gz"
+response = requests.get(url)
+content_id_to_dandiset_paths = json.loads(gzip.decompress(data=response.content))
 ```
 
 ### Save to file
 
 ```bash
-curl https://raw.githubusercontent.com/dandi-cache/content-id-to-dandiset-paths/refs/heads/main/derivatives/content_id_to_dandiset_paths.yaml -o content_id_to_dandiset_paths.min.json.gz
+curl https://raw.githubusercontent.com/dandi-cache/content-id-to-dandiset-paths/refs/heads/min/derivatives/content_id_to_dandiset_paths.min.json.gz -o content_id_to_dandiset_paths.min.json.gz
 ```
 
 
