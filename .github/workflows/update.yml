@@ -22,6 +22,13 @@ jobs:
         with:
           python-version: 3.13
 
+      - name: Restore sourcedata cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.REPO_DIR }}/sourcedata
+          key: sourcedata-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: sourcedata-${{ runner.os }}-
+
       - name: Run update
         run: |
           git config --global user.name "github-actions[bot]"
@@ -29,7 +36,7 @@ jobs:
 
           pip install s5cmd PyYaml
 
-          s5cmd --no-sign-request cp "s3://dandiarchive/dandisets/*/assets.yaml" "$REPO_DIR/sourcedata" || true
+          s5cmd --no-sign-request sync "s3://dandiarchive/dandisets/*/assets.yaml" "$REPO_DIR/sourcedata" || true
           python $REPO_DIR/code/update.py
 
       - name: Upload YAML
