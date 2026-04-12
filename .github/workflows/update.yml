@@ -5,64 +5,64 @@ on:
     - cron: "0 0 * * *"
   workflow_dispatch:
 
-env:
-  GITHUB_TOKEN: ${{ secrets._GITHUB_API_KEY }}
-  REPO_DIR: ${{ github.event.repository.name }}
-
 jobs:
   Update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
-      - name: Clone
-        run: git clone -b main https://x-access-token:${{ secrets._GITHUB_API_KEY }}@github.com/dandi-cache/$REPO_DIR.git
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          python-version: 3.13
+          token: ${{ secrets._GITHUB_API_KEY }}
+
+      - name: Configure git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "envs/uv.lock"
 
       - name: Restore sourcedata cache
         uses: actions/cache@v4
         with:
-          path: ${{ env.REPO_DIR }}/sourcedata
+          path: sourcedata
           key: sourcedata-${{ runner.os }}-${{ github.run_id }}
           restore-keys: sourcedata-${{ runner.os }}-
 
       - name: Run update
         run: |
-          git pull
-
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-
-          pip install s5cmd PyYaml
-
-          s5cmd --no-sign-request sync "s3://dandiarchive/dandisets/*/assets.yaml" "$REPO_DIR/sourcedata" || true
-          python $REPO_DIR/code/update.py
+          uv run --project envs s5cmd --no-sign-request sync "s3://dandiarchive/dandisets/*/assets.yaml" sourcedata || true
+          uv run --project envs python ./code/update.py
 
       - name: Upload YAML
         run: |
-          git -C $REPO_DIR add .
-          git -C $REPO_DIR commit --message "update" || true  # || true in case of no changes
-          git -C $REPO_DIR push
+          git add .
+          git commit --message "update" || true  # || true in case of no changes
+          git push
 
       - name: Run minification
-        run: python $REPO_DIR/code/minify.py
+        run: uv run --project envs python ./code/minify.py
 
       - name: Upload minification
         run: |
-          git -C $REPO_DIR push origin --delete min || true  # || true in case branch doesn't exist yet
+          git push origin --delete min || true  # || true in case branch doesn't exist yet
 
-          git -C $REPO_DIR checkout -b min
-          git -C $REPO_DIR add .
-          git -C $REPO_DIR commit --message "update min" || true  # || true in case of no changes
-          git -C $REPO_DIR push --set-upstream origin min
+          git checkout -b min
+          git add .
+          git commit --message "update min" || true  # || true in case of no changes
+          git push --set-upstream origin min
 
   NotifyOnFailure:
     runs-on: ubuntu-latest
     needs: [ Update ]
     if: ${{ always() && failure() }}
+    permissions: {}
     steps:
       - uses: dawidd6/action-send-mail@v3
         with:
@@ -73,4 +73,4 @@ jobs:
           subject: "CI Failure: DANDI Cache: Content ID → Dandiset paths update"
           to: cody.c.baker.phd@gmail.com  # Add more with comma separation (no spaces)
           from: dandi-cache
-          body: "Please check the latest run of the BIDS-Dandisets Dashboard update: https://github.com/dandi-cache/content-id-to-dandiset-paths/actions/workflows/update.yml"
+          body: "Please check the latest run of the BIDS-Dandisets Dashboard update: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
