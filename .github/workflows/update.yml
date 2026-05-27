@@ -73,4 +73,4 @@ jobs:
           subject: "CI Failure: DANDI Cache: Content ID → Dandiset paths update"
           to: cody.c.baker.phd@gmail.com  # Add more with comma separation (no spaces)
           from: dandi-cache
-          body: "Please check the latest run of the BIDS-Dandisets Dashboard update: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          body: "Please check the latest run of the DANDI Cache: Content ID → Dandiset paths update: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
